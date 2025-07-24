@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import { ResponseInput } from "openai/resources/responses/responses";
 dotenv.config();
 
 export class OpenAIService {
@@ -33,45 +34,101 @@ export class OpenAIService {
       const base64Image = imageBuffer.toString("base64");
       const mimeType = this.getMimeType(originalFilename);
 
-      const response = await this.getOpenAI().chat.completions.create({
-        model: "gpt-4o", // Use GPT-4 with vision capabilities
-        messages: [
+      const response = await this.getOpenAI().responses.create({
+        model: "o4-mini",
+        tools: [
+          { type: "web_search_preview" },
+          {
+            type: "function",
+            strict: true,
+            description:
+              "Identify artifacts in images with detailed cultural context",
+            name: "identify_artifact",
+            parameters: {
+              type: "object",
+              properties: {
+                name: { type: "string", description: "Name of the artifact" },
+                category: {
+                  type: "string",
+                  description:
+                    "Category (e.g., ceramics, metal, textiles, weapons, jewelry, etc.)",
+                },
+                description: {
+                  type: "string",
+                  description: "Brief description of the artifact",
+                },
+                history: {
+                  type: "string",
+                  description: "History and cultural context of the artifact",
+                },
+                confidence: {
+                  type: "number",
+                  description: "Confidence level of identification (0-1)",
+                },
+                isRecognized: {
+                  type: "boolean",
+                  description: "Whether the artifact is recognized or not",
+                },
+                culturalSignificance: {
+                  type: "string",
+                  description: "Cultural significance and use of the artifact",
+                },
+                estimatedAge: {
+                  type: "string",
+                  description: "Estimated age or period of the artifact",
+                },
+                materials: {
+                  type: "string",
+                  description: "Materials used in the artifact",
+                },
+              },
+              required: [
+                "name",
+                "category",
+                "description",
+                "history",
+                "confidence",
+                "isRecognized",
+                "culturalSignificance",
+                "estimatedAge",
+                "materials",
+              ],
+              additionalProperties: false,
+            },
+          },
+        ],
+        input: [
           {
             role: "user",
             content: [
               {
-                type: "text",
-                text: `Tolong identifikasi artefak/benda dalam gambar ini. Berikan informasi berikut dalam format JSON:
-                {
-                  "name": "nama benda",
-                  "category": "kategori (contoh: keramik, logam, tekstil, senjata, perhiasan, dll)",
-                  "description": "deskripsi singkat benda",
-                  "history": "sejarah dan konteks budaya benda ini",
-                  "confidence": 0.8,
-                  "isRecognized": true,
-                  "culturalSignificance": "makna budaya dan kegunaan",
-                  "estimatedAge": "perkiraan umur atau periode",
-                  "materials": "bahan yang digunakan"
-                }
+                type: "input_text",
+                text: `Tolong identifikasi artefak/benda dalam gambar ini.
 
                 Jika tidak bisa diidentifikasi, gunakan confidence rendah dan isRecognized: false, serta berikan response yang humoris seperti "Maaf, gua nggak kenal... mungkin gua artefak KW 👻" di bagian description.
                 
                 Gunakan bahasa Indonesia yang santai dan ramah. Jika benda dikenal, berikan informasi yang akurat dan menarik.`,
               },
               {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mimeType};base64,${base64Image}`,
-                },
+                type: "input_image",
+                image_url: `data:${mimeType};base64,${base64Image}`,
+                detail: "auto",
               },
             ],
           },
         ],
-        max_tokens: 1000,
-        temperature: 0.7,
+        max_output_tokens: 1000,
       });
 
-      const result = response.choices[0]?.message?.content;
+      const functionCall = response?.output?.find(
+        (output) =>
+          output.type === "function_call" && output.name === "identify_artifact"
+      );
+      const result =
+        functionCall && "arguments" in functionCall
+          ? functionCall.arguments
+          : null;
+
       if (!result) {
         throw new Error("No response from OpenAI");
       }
@@ -154,7 +211,7 @@ ATURAN:
       ];
 
       const response = await this.getOpenAI().chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4.1-mini",
         messages: messages as any,
         max_tokens: 300,
         temperature: 0.8,
@@ -169,6 +226,26 @@ ATURAN:
     } catch (error) {
       console.error("Error generating chat response:", error);
       return "Waduh, ada gangguan teknis... aku jadi speechless deh! 🤐 Coba lagi ya!";
+    }
+  }
+
+  /**
+   * Stream artifact chat response for real-time experience
+   */
+  async streamArtifactChat(messages: string | ResponseInput) {
+    try {
+      const stream = await this.getOpenAI().responses.create({
+        model: "gpt-4.1-mini",
+        input: messages,
+        max_output_tokens: 300,
+        temperature: 0.8,
+        stream: true,
+      });
+
+      return stream;
+    } catch (error) {
+      console.error("Error streaming chat response:", error);
+      throw error;
     }
   }
 

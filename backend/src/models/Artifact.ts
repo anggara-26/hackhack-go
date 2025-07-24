@@ -11,6 +11,9 @@ export interface IArtifact extends Document {
     history?: string;
     confidence: number;
     isRecognized: boolean;
+    culturalSignificance?: string;
+    estimatedAge?: string;
+    materials?: string;
   };
   userId?: string; // Optional for anonymous usage
   createdAt: Date;
@@ -53,6 +56,18 @@ const ArtifactSchema: Schema = new Schema(
       isRecognized: {
         type: Boolean,
         default: false,
+      },
+      culturalSignificance: {
+        type: String,
+        default: "",
+      },
+      estimatedAge: {
+        type: String,
+        default: "",
+      },
+      materials: {
+        type: String,
+        default: "",
       },
     },
     userId: {

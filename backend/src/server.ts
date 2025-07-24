@@ -2,6 +2,8 @@ import express, { Application, Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 import connectDB from "./config/database";
 import testRoutes from "./routes/test";
 import sessionRoutes from "./routes/sessions";
@@ -12,11 +14,13 @@ import voiceRoutes from "./routes/voice";
 // import otpRoutes from "./routes/otp";
 import { errorController } from "./controller";
 import { emailService } from "./utils/email";
+import { initializeSocketService } from "./services/socketService";
 
 // Load environment variables
 dotenv.config();
 
 const app: Application = express();
+const server = http.createServer(app);
 const PORT: number = parseInt(process.env.PORT as string) || 5000;
 
 // Middleware
@@ -26,6 +30,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Connect to database
 connectDB();
+
+// Initialize Socket.IO service
+const socketServiceInstance = initializeSocketService(server);
 
 // Routes
 app.use("/api", testRoutes);
@@ -63,9 +70,10 @@ app.use("*", (req: Request, res: Response) => {
 });
 
 // Start server
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🌐 Socket.IO service initialized`);
 
   // Verify email service connection
   const emailConnected = await emailService.verifyConnection();
