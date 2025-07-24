@@ -1,48 +1,216 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# ArtifactID - React Native Mobile App
 
-# Getting Started
+Aplikasi mobile React Native untuk mengidentifikasi dan berinteraksi dengan artefak budaya Indonesia menggunakan AI.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🚀 Fitur Utama
 
-## Step 1: Start Metro
+### 1. **Onboarding & Authentication**
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- **Splash Screen**: Loading screen dengan branding aplikasi
+- **Onboarding**: Tutorial interaktif untuk pengguna baru
+- **Authentication**: Login/Register dengan JWT token
+- **Forgot Password**: Reset password via email
+- **Guest Mode**: Akses terbatas tanpa registrasi
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+### 2. **Home/Dashboard**
 
-```sh
-# Using npm
-npm start
+- **Welcome Banner**: Sapaan personal berdasarkan waktu
+- **Quick Actions**: Akses cepat ke fitur utama
+- **Search**: Pencarian artefak dengan autocomplete
+- **Recent Artifacts**: Riwayat identifikasi terbaru
+- **Popular Artifacts**: Trending artefak populer
+- **Statistics**: Jumlah identifikasi dan koleksi
 
-# OR using Yarn
-yarn start
+### 3. **Take Photo & Identification**
+
+- **Camera Integration**: Kamera native dengan kontrol manual
+- **Gallery Selection**: Pilih foto dari galeri
+- **Photo Preview**: Konfirmasi foto sebelum upload
+- **AI Processing**: Identifikasi menggunakan OpenAI Vision
+- **Confidence Score**: Tingkat keyakinan identifikasi
+- **Multiple Results**: Hasil alternatif jika tidak yakin
+
+### 4. **Chat with Artifact**
+
+- **WhatsApp-style UI**: Interface chat yang familiar
+- **Personality AI**: Setiap artefak punya karakter unik
+- **Quick Questions**: Pertanyaan cepat yang sering ditanyakan
+- **Voice Messages**: Pesan suara (planned)
+- **Share Chat**: Bagikan percakapan
+- **Rating System**: Rating untuk kualitas chat
+
+### 5. **History & Collection**
+
+- **Identification History**: Riwayat semua identifikasi
+- **Favorites**: Bookmark artefak favorit
+- **Chat Transcripts**: Simpan percakapan
+- **Export**: Export data ke PDF/JSON
+- **Search & Filter**: Cari dalam riwayat
+
+## 🛠 Tech Stack
+
+### Core Framework
+
+- **React Native**: 0.72+
+- **TypeScript**: Untuk type safety
+- **React Navigation**: v6 untuk navigasi
+
+### State Management & Storage
+
+- **AsyncStorage**: Penyimpanan lokal
+- **Context API**: State management sederhana
+- **Custom Hooks**: Reusable logic
+
+### Backend Integration
+
+- **Axios**: HTTP client
+- **Socket.IO**: Real-time chat
+- **JWT**: Authentication
+- **File Upload**: Multipart form data
+
+### UI/UX
+
+- **Custom Components**: Reusable UI components
+- **Responsive Design**: Adaptif untuk berbagai ukuran layar
+- **Dark Mode Ready**: Siap untuk dark theme
+- **Accessibility**: WCAG compliant
+
+## 📁 Struktur Project
+
+```
+src/
+├── components/          # Reusable UI components
+├── screens/            # Screen components
+│   ├── auth/          # Authentication screens
+│   ├── SplashScreen.tsx
+│   ├── OnboardingScreen.tsx
+│   ├── HomeScreen.tsx
+│   ├── CameraScreen.tsx
+│   ├── ChatScreen.tsx
+│   ├── HistoryScreen.tsx
+│   ├── ProfileScreen.tsx
+│   ├── PhotoPreviewScreen.tsx
+│   └── ArtifactResultScreen.tsx
+├── navigation/         # Navigation configuration
+│   ├── RootNavigator.tsx
+│   └── MainTabs.tsx
+├── services/          # API and business logic
+│   ├── api.ts         # HTTP client
+│   ├── auth.ts        # Authentication
+│   ├── artifact.ts    # Artifact identification
+│   ├── chat.ts        # Chat messaging
+│   ├── socket.ts      # WebSocket connection
+│   └── storage.ts     # Local storage
+├── hooks/             # Custom React hooks
+│   └── useNavigation.ts
+├── types/             # TypeScript type definitions
+│   └── index.ts
+├── utils/             # Utility functions
+└── App.tsx           # Root component
 ```
 
-## Step 2: Build and run your app
+## 🔧 Setup & Installation
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### Prerequisites
 
-### Android
+- Node.js 16+
+- React Native CLI
+- Android Studio / Xcode
+- Java 11+
 
-```sh
-# Using npm
+### Installation Steps
+
+1. **Clone & Install Dependencies**
+
+```bash
+cd frontend
+npm install
+```
+
+2. **Install iOS Dependencies** (macOS only)
+
+```bash
+cd ios && pod install && cd ..
+```
+
+3. **Configure Environment**
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit environment variables
+nano .env
+```
+
+4. **Start Metro Server**
+
+```bash
+npm start
+```
+
+5. **Run on Device/Simulator**
+
+```bash
+# Android
 npm run android
 
-# OR using Yarn
-yarn android
+# iOS
+npm run ios
 ```
 
-### iOS
+## 🔐 Security Features
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+- **JWT Authentication**: Secure token-based auth
+- **Input Validation**: Client & server-side validation
+- **Image Encryption**: Secure image upload
+- **Privacy Controls**: Data privacy settings
+- **Secure Storage**: Encrypted local storage
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## 📱 Development
 
-```sh
-bundle install
+### Available Scripts
+
+```bash
+npm start          # Start Metro bundler
+npm run android    # Run on Android
+npm run ios        # Run on iOS
+npm test          # Run tests
+npm run lint      # Check code style
+npx tsc --noEmit  # Type checking
 ```
 
-Then, and every time you update your native dependencies, run:
+### Common Issues
+
+**Metro bundler error:**
+
+```bash
+npx react-native start --reset-cache
+```
+
+**Android build error:**
+
+```bash
+cd android && ./gradlew clean && cd ..
+```
+
+**iOS build error:**
+
+```bash
+cd ios && rm -rf Pods && pod install && cd ..
+```
+
+## 🚀 Next Steps
+
+1. **Implement Camera**: Integrate react-native-image-picker
+2. **Connect Backend**: Wire up API endpoints
+3. **Real-time Chat**: Implement Socket.IO connection
+4. **Voice Features**: Add audio recording/playback
+5. **Push Notifications**: Firebase integration
+
+---
+
+**Made with ❤️ for Indonesian Cultural Heritage**
 
 ```sh
 bundle exec pod install
