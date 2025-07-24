@@ -5,7 +5,13 @@ import dotenv from "dotenv";
 import connectDB from "./config/database";
 import testRoutes from "./routes/test";
 import sessionRoutes from "./routes/sessions";
+import authRoutes from "./routes/auth";
+import artifactRoutes from "./routes/artifacts";
+import chatRoutes from "./routes/chat";
+import voiceRoutes from "./routes/voice";
+// import otpRoutes from "./routes/otp";
 import { errorController } from "./controller";
+import { emailService } from "./utils/email";
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +30,11 @@ connectDB();
 // Routes
 app.use("/api", testRoutes);
 app.use("/api/sessions", sessionRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/artifacts", artifactRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/voice", voiceRoutes);
+// app.use("/api/otp", otpRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
@@ -52,9 +63,15 @@ app.use("*", (req: Request, res: Response) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
+
+  // Verify email service connection
+  const emailConnected = await emailService.verifyConnection();
+  console.log(
+    `📧 Email service: ${emailConnected ? "Connected" : "Failed to connect"}`
+  );
 });
 
 export default app;
