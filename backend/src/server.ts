@@ -1,14 +1,17 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const connectDB = require("./config/database");
+import express, { Application, Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import connectDB from "./config/database";
+import testRoutes from "./routes/test";
+import sessionRoutes from "./routes/sessions";
+import { errorController } from "./controller";
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 5000;
+const app: Application = express();
+const PORT: number = parseInt(process.env.PORT as string) || 5000;
 
 // Middleware
 app.use(cors());
@@ -19,9 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 connectDB();
 
 // Routes
-app.use("/api", require("./routes/test"));
+app.use("/api", testRoutes);
+app.use("/api/sessions", sessionRoutes);
 
-app.get("/", (req, res) => {
+app.get("/", (req: Request, res: Response) => {
   res.json({
     message: "Hackathon Backend API",
     status: "Server is running!",
@@ -30,7 +34,7 @@ app.get("/", (req, res) => {
 });
 
 // Health check endpoint
-app.get("/health", (req, res) => {
+app.get("/health", (req: Request, res: Response) => {
   res.json({
     status: "OK",
     database:
@@ -40,19 +44,10 @@ app.get("/health", (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    message: "Something went wrong!",
-    error:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Internal server error",
-  });
-});
+app.use(errorController.errorHandler);
 
 // 404 handler
-app.use("*", (req, res) => {
+app.use("*", (req: Request, res: Response) => {
   res.status(404).json({ message: "Route not found" });
 });
 
@@ -62,4 +57,4 @@ app.listen(PORT, () => {
   console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
-module.exports = app;
+export default app;

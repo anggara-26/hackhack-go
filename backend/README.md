@@ -4,12 +4,13 @@ Express.js backend with MongoDB connection for the hackathon project.
 
 ## Features
 
-- ✅ Express.js server setup
+- ✅ Express.js server setup with TypeScript
 - ✅ MongoDB connection with Mongoose
 - ✅ Environment variables configuration
 - ✅ CORS enabled
 - ✅ Error handling middleware
 - ✅ Health check endpoint
+- ✅ Type-safe development with TypeScript
 - ✅ Basic project structure
 
 ## Setup Instructions
@@ -32,16 +33,23 @@ Express.js backend with MongoDB connection for the hackathon project.
 
 4. **Run the server:**
 
-   **Development mode (with nodemon):**
+   **Development mode (with TypeScript hot reload):**
 
    ```bash
    npm run dev
    ```
 
-   **Production mode:**
+   **Build and run in production:**
 
    ```bash
+   npm run build
    npm start
+   ```
+
+   **Clean build artifacts:**
+
+   ```bash
+   npm run clean
    ```
 
 ## API Endpoints
@@ -59,17 +67,23 @@ Express.js backend with MongoDB connection for the hackathon project.
 
 ```
 backend/
-├── config/
-│   └── database.js     # Database connection configuration
-├── models/
-│   └── User.js         # Example User model
-├── routes/
-│   └── test.js         # Test routes
-├── .env                # Environment variables
-├── .gitignore         # Git ignore file
-├── package.json       # Dependencies and scripts
-├── server.js          # Main server file
-└── README.md          # This file
+├── src/
+│   ├── config/
+│   │   └── database.ts     # Database connection configuration
+│   ├── models/
+│   │   └── User.ts         # User model with TypeScript interface
+│   ├── routes/
+│   │   └── test.ts         # Test routes
+│   ├── types/
+│   │   └── environment.d.ts # Environment variables type definitions
+│   └── server.ts           # Main server file
+├── dist/                   # Compiled JavaScript output
+├── .env                    # Environment variables
+├── .gitignore             # Git ignore file
+├── nodemon.json           # Nodemon configuration for TypeScript
+├── package.json           # Dependencies and scripts
+├── tsconfig.json          # TypeScript configuration
+└── README.md              # This file
 ```
 
 ## Environment Variables
@@ -84,7 +98,8 @@ backend/
 
 The server includes:
 
-- Hot reloading with nodemon
+- Hot reloading with nodemon and ts-node
+- TypeScript compilation and type checking
 - Error handling middleware
 - CORS configuration
 - Database connection status monitoring
@@ -101,8 +116,10 @@ The server includes:
 
 ## Technologies Used
 
+- **TypeScript** - Type-safe JavaScript development
 - **Express.js** - Web framework
 - **Mongoose** - MongoDB ODM
 - **dotenv** - Environment variables
 - **cors** - Cross-origin resource sharing
 - **nodemon** - Development server auto-restart
+- **ts-node** - TypeScript execution environment
