@@ -59,7 +59,7 @@ export class ApiService {
       },
     };
 
-    console.log(`Making request to: ${url}`, config);
+    console.log(`Making request to: ${endpoint}`, config);
 
     try {
       const response = await fetch(url, config);
@@ -69,8 +69,11 @@ export class ApiService {
         throw new Error(data.message || `HTTP ${response.status}`);
       }
 
+      console.log(`Response from ${endpoint}:`, data);
+
       return data;
     } catch (error) {
+      console.log('API Request Error:', error);
       console.error('API Request Error:', error);
       throw error;
     }

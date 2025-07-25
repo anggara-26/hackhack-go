@@ -63,7 +63,7 @@ export class SocketService {
             // Send current chat history
             const artifact = await Artifact.findById(chatSession.artifactId);
 
-            socket.emit("chat_joined", {
+            socket.emit("joined_chat", {
               chatSession,
               artifact: artifact
                 ? {
@@ -214,13 +214,13 @@ export class SocketService {
 
       chatSession.messages.push(userMessage);
 
-      // Emit user message to all clients in the room
-      this.io.to(chatSessionId).emit("message_received", {
+      // Emit user message to other clients in the room (not the sender)
+      socket.broadcast.to(chatSessionId).emit("message_received", {
         message: userMessage,
         isQuickQuestion,
       });
 
-      // Show typing indicator for AI
+      // Show typing indicator for AI to all clients
       this.io.to(chatSessionId).emit("ai_typing", {
         artifactName: artifact.identificationResult.name,
       });

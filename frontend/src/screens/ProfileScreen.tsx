@@ -10,11 +10,14 @@ import {
 import { useNavigation } from '../hooks/useNavigation';
 import AuthService from '../services/auth';
 import { User } from '../types';
+import { useAuthStore } from '../stores/StoreProvider';
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const authStore = useAuthStore();
 
   useEffect(() => {
     loadUserData();
@@ -35,7 +38,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleLogin = () => {
-    navigation.navigate('Auth');
+    navigation.navigate('Login');
   };
 
   const handleLogout = () => {
@@ -46,9 +49,7 @@ const ProfileScreen: React.FC = () => {
         style: 'destructive',
         onPress: async () => {
           try {
-            await AuthService.logout();
-            setUser(null);
-            setIsAuthenticated(false);
+            await authStore.logout();
             navigation.navigate('Home');
           } catch (error) {
             Alert.alert('Error', 'Gagal logout');
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   header: {
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 20,
     backgroundColor: '#fff',

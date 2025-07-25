@@ -25,7 +25,7 @@ interface OnboardingScreenProps {
 const onboardingData: OnboardingSlide[] = [
   {
     id: '1',
-    title: 'Selamat Datang di Museum AI',
+    title: 'Selamat Datang di Museyo',
     description:
       'Jelajahi dunia artefak bersejarah dengan bantuan kecerdasan buatan yang canggih',
     image: '🏛️',

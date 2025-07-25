@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { observer } from 'mobx-react-lite';
 
 // Screens
 import SplashScreen from '../screens/SplashScreen';
@@ -18,8 +19,10 @@ import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 // Services
-import AuthService from '../services/auth';
 import StorageService from '../services/storage';
+
+// Stores
+import { useAuthStore } from '../stores/StoreProvider';
 
 // Types
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -57,7 +60,9 @@ function MainTabs() {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Beranda',
-          tabBarIcon: ({ color, size, focused }) => <House />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <House fill={focused ? color : 'transparent'} />
+          ),
         }}
       />
       <Tab.Screen
@@ -65,7 +70,9 @@ function MainTabs() {
         component={CameraScreen}
         options={{
           tabBarLabel: 'Kamera',
-          tabBarIcon: ({ color, size }) => <Camera />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Camera fill={focused ? color : 'transparent'} />
+          ),
         }}
       />
       <Tab.Screen
@@ -73,7 +80,9 @@ function MainTabs() {
         component={HistoryScreen}
         options={{
           tabBarLabel: 'Riwayat',
-          tabBarIcon: ({ color, size }) => <GalleryHorizontalEnd />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <GalleryHorizontalEnd fill={focused ? color : 'transparent'} />
+          ),
         }}
       />
       <Tab.Screen
@@ -81,7 +90,9 @@ function MainTabs() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profil',
-          tabBarIcon: ({ color, size }) => <User />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <User fill={focused ? color : 'transparent'} />
+          ),
         }}
       />
     </Tab.Navigator>
@@ -106,38 +117,37 @@ function AuthStack() {
 }
 
 // Root Navigator
-export default function RootNavigator() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+const RootNavigator = observer(() => {
+  const authStore = useAuthStore();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   useEffect(() => {
-    checkAuthStatus();
+    checkOnboardingStatus();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const checkOnboardingStatus = async () => {
     try {
       // Check if onboarding is completed
       const onboardingCompleted = await StorageService.isOnboardingCompleted();
 
       if (!onboardingCompleted) {
         setShowOnboarding(true);
-        setIsLoading(false);
-        return;
       }
-
-      // Check authentication status
-      const authenticated = await AuthService.isAuthenticated();
-      setIsAuthenticated(authenticated);
     } catch (error) {
-      console.error('Error checking auth status:', error);
-      setIsAuthenticated(false);
+      console.error('Error checking onboarding status:', error);
     } finally {
-      setIsLoading(false);
+      setInitialCheckDone(true);
     }
   };
 
-  if (isLoading) {
+  const handleOnboardingComplete = async () => {
+    await StorageService.setOnboardingCompleted(true);
+    setShowOnboarding(false);
+  };
+
+  // Show splash screen while loading
+  if (!initialCheckDone || authStore.isLoading) {
     return (
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -161,7 +171,7 @@ export default function RootNavigator() {
             component={OnboardingScreen}
             initialParams={{ onComplete: () => setShowOnboarding(false) }}
           />
-        ) : isAuthenticated ? (
+        ) : authStore.isAuthenticated ? (
           <>
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen
@@ -188,46 +198,16 @@ export default function RootNavigator() {
               options={{
                 headerShown: true,
                 title: 'Chat dengan Artefak',
-                headerBackTitleVisible: false,
                 headerTintColor: '#6366f1',
               }}
             />
           </>
         ) : (
-          <>
-            <Stack.Screen name="Auth" component={AuthStack} />
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen
-              name="PhotoPreview"
-              component={PhotoPreviewScreen}
-              options={{
-                presentation: 'modal',
-                cardStyle: { backgroundColor: '#000' },
-              }}
-            />
-            <Stack.Screen
-              name="ArtifactResult"
-              component={ArtifactResultScreen}
-              options={{
-                headerShown: true,
-                title: 'Hasil Identifikasi',
-                headerBackTitleVisible: false,
-                headerTintColor: '#6366f1',
-              }}
-            />
-            <Stack.Screen
-              name="Chat"
-              component={ChatScreen}
-              options={{
-                headerShown: true,
-                title: 'Chat dengan Artefak',
-                headerBackTitleVisible: false,
-                headerTintColor: '#6366f1',
-              }}
-            />
-          </>
+          <Stack.Screen name="Auth" component={AuthStack} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+});
+
+export default RootNavigator;

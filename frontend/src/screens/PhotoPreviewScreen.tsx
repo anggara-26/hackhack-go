@@ -1,23 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { useNavigation } from '../hooks/useNavigation';
 import { useRoute } from '@react-navigation/native';
+import ArtifactService from '../services/artifact';
 
 const PhotoPreviewScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  // const { photoUri } = route.params as { photoUri: string };
+  const { photoUri } = route.params as { photoUri: string };
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleRetake = () => {
     navigation.goBack();
   };
 
-  const handleConfirm = () => {
-    Alert.alert(
-      'Photo Processing',
-      'Photo would be sent to AI for identification. This is a placeholder.',
-      [{ text: 'OK', onPress: () => navigation.navigate('Home') }],
-    );
+  const handleConfirm = async () => {
+    try {
+      setIsProcessing(true);
+
+      // Upload and identify the artifact
+      const result = await ArtifactService.uploadAndIdentify(photoUri);
+
+      if (result.success && result.data) {
+        navigation.navigate('ArtifactResult', {
+          artifact: result.data.artifact,
+        });
+      } else {
+        Alert.alert(
+          'Identifikasi Gagal',
+          result.error ||
+            'Tidak dapat mengidentifikasi artefak. Coba lagi dengan foto yang lebih jelas.',
+          [{ text: 'OK' }],
+        );
+      }
+    } catch (error) {
+      console.error('Identification error:', error);
+      Alert.alert(
+        'Error',
+        'Terjadi kesalahan saat mengidentifikasi artefak. Periksa koneksi internet Anda.',
+        [{ text: 'OK' }],
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -31,19 +64,31 @@ const PhotoPreviewScreen: React.FC = () => {
       </View>
 
       <View style={styles.imageContainer}>
-        <Text style={styles.imagePlaceholder}>🖼️</Text>
+        <Image source={{ uri: photoUri }} style={styles.previewImage} />
         <Text style={styles.previewText}>
-          Preview foto akan ditampilkan di sini
+          Pastikan artefak terlihat jelas dalam foto
         </Text>
       </View>
 
       <View style={styles.controls}>
-        <TouchableOpacity style={styles.retakeButton} onPress={handleRetake}>
+        <TouchableOpacity
+          style={[styles.retakeButton, isProcessing && styles.disabledButton]}
+          onPress={handleRetake}
+          disabled={isProcessing}
+        >
           <Text style={styles.retakeButtonText}>Ambil Ulang</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>Identifikasi</Text>
+        <TouchableOpacity
+          style={[styles.confirmButton, isProcessing && styles.disabledButton]}
+          onPress={handleConfirm}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.confirmButtonText}>Identifikasi</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -59,7 +104,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -83,6 +128,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     backgroundColor: '#1a1a1a',
     borderRadius: 20,
+    overflow: 'hidden',
+  },
+  previewImage: {
+    width: '100%',
+    height: '80%',
+    resizeMode: 'contain',
   },
   imagePlaceholder: {
     fontSize: 80,
@@ -120,6 +171,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 

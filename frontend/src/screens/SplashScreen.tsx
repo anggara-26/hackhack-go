@@ -48,7 +48,7 @@ const SplashScreen: React.FC = () => {
           <Text style={styles.logoText}>🏛️</Text>
         </View>
 
-        <Text style={styles.appName}>Museum AI</Text>
+        <Text style={styles.appName}>Museyo</Text>
         <Text style={styles.tagline}>Jelajahi Sejarah dengan AI</Text>
       </Animated.View>
 

@@ -5,9 +5,9 @@ import {
   MessageComplete,
   SocketChatData,
 } from '../types';
+import ApiService from './api';
 
-const SOCKET_URL = 'http://10.0.2.2:5000'; // Android emulator
-// const SOCKET_URL = 'http://localhost:5000'; // iOS simulator
+const SOCKET_URL = ApiService.BASE_URL_PLAIN;
 
 export class SocketService {
   private static instance: SocketService;
@@ -78,7 +78,7 @@ export class SocketService {
 
   // Join chat room
   joinChat(
-    sessionId: string,
+    chatSessionId: string,
   ): Promise<{ sessionId: string; artifactInfo: any }> {
     return new Promise((resolve, reject) => {
       if (!this.socket) {
@@ -86,7 +86,7 @@ export class SocketService {
         return;
       }
 
-      this.socket.emit('join_chat', { sessionId });
+      this.socket.emit('join_chat', { chatSessionId });
 
       this.socket.once('joined_chat', data => {
         resolve(data);
@@ -105,7 +105,7 @@ export class SocketService {
 
   // Send message with streaming response
   sendMessage(
-    sessionId: string,
+    chatSessionId: string,
     message: string,
     onChunk: (chunk: MessageChunk) => void,
     onComplete: (complete: MessageComplete) => void,
@@ -116,29 +116,29 @@ export class SocketService {
       return;
     }
 
-    // Listen for response chunks
-    this.socket.on('message_chunk', onChunk);
+    // Listen for AI response chunks
+    this.socket.on('ai_response_chunk', onChunk);
 
     // Listen for complete response
-    this.socket.once('message_complete', (data: MessageComplete) => {
+    this.socket.once('ai_response_end', (data: MessageComplete) => {
       // Clean up listeners
-      this.socket?.off('message_chunk', onChunk);
+      this.socket?.off('ai_response_chunk', onChunk);
       onComplete(data);
     });
 
     // Listen for errors
     this.socket.once('error', error => {
-      this.socket?.off('message_chunk', onChunk);
+      this.socket?.off('ai_response_chunk', onChunk);
       onError?.(new Error(error.message));
     });
 
     // Send message
-    this.socket.emit('send_message', { sessionId, message });
+    this.socket.emit('send_message', { message });
   }
 
   // Send quick question
   sendQuickQuestion(
-    sessionId: string,
+    chatSessionId: string,
     question: string,
     onChunk: (chunk: MessageChunk) => void,
     onComplete: (complete: MessageComplete) => void,
@@ -149,37 +149,37 @@ export class SocketService {
       return;
     }
 
-    // Listen for response chunks
-    this.socket.on('message_chunk', onChunk);
+    // Listen for AI response chunks
+    this.socket.on('ai_response_chunk', onChunk);
 
     // Listen for complete response
-    this.socket.once('message_complete', (data: MessageComplete) => {
+    this.socket.once('ai_response_end', (data: MessageComplete) => {
       // Clean up listeners
-      this.socket?.off('message_chunk', onChunk);
+      this.socket?.off('ai_response_chunk', onChunk);
       onComplete(data);
     });
 
     // Listen for errors
     this.socket.once('error', error => {
-      this.socket?.off('message_chunk', onChunk);
+      this.socket?.off('ai_response_chunk', onChunk);
       onError?.(new Error(error.message));
     });
 
     // Send quick question
-    this.socket.emit('quick_question', { sessionId, question });
+    this.socket.emit('send_quick_question', { question });
   }
 
   // Start typing indicator
-  startTyping(sessionId: string): void {
+  startTyping(chatSessionId: string): void {
     if (this.socket) {
-      this.socket.emit('typing_start', { sessionId });
+      this.socket.emit('typing_start');
     }
   }
 
   // Stop typing indicator
-  stopTyping(sessionId: string): void {
+  stopTyping(chatSessionId: string): void {
     if (this.socket) {
-      this.socket.emit('typing_stop', { sessionId });
+      this.socket.emit('typing_stop');
     }
   }
 
@@ -196,9 +196,29 @@ export class SocketService {
     }
   }
 
+  // Listen for new messages (for chat screen)
+  onNewMessage(callback: (message: ChatMessage) => void): void {
+    if (this.socket) {
+      this.socket.on('new_message', callback);
+    }
+  }
+
+  // Listen for typing indicators (simplified for chat screen)
+  onTyping(callback: () => void): void {
+    if (this.socket) {
+      this.socket.on('user_typing', callback);
+    }
+  }
+
+  onStopTyping(callback: () => void): void {
+    if (this.socket) {
+      this.socket.on('user_stopped_typing', callback);
+    }
+  }
+
   // Rate conversation
   rateConversation(
-    sessionId: string,
+    chatSessionId: string,
     rating: 'up' | 'down',
   ): Promise<{ rating: string }> {
     return new Promise((resolve, reject) => {
@@ -207,9 +227,9 @@ export class SocketService {
         return;
       }
 
-      this.socket.emit('rate_conversation', { sessionId, rating });
+      this.socket.emit('rate_chat', { rating });
 
-      this.socket.once('conversation_rated', data => {
+      this.socket.once('rating_saved', data => {
         resolve(data);
       });
 
@@ -224,9 +244,9 @@ export class SocketService {
   }
 
   // Leave chat room
-  leaveChat(sessionId: string): void {
+  leaveChat(chatSessionId: string): void {
     if (this.socket) {
-      this.socket.emit('leave_chat', { sessionId });
+      this.socket.emit('leave_chat', { chatSessionId });
     }
   }
 

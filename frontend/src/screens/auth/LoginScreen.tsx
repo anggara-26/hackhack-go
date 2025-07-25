@@ -13,16 +13,17 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import AuthService from '../../services/auth';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore } from '../../stores/StoreProvider';
 import { LoginForm } from '../../types';
 
-const LoginScreen: React.FC = () => {
+const LoginScreen: React.FC = observer(() => {
   const navigation = useNavigation();
+  const authStore = useAuthStore();
   const [form, setForm] = useState<LoginForm>({
     email: '',
     password: '',
   });
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
@@ -36,29 +37,13 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await AuthService.login(form);
+    const success = await authStore.login(form.email, form.password);
 
-      if (response.success) {
-        // Save refresh token if provided
-        if (response.data?.refreshToken) {
-          await AuthService.saveRefreshToken(response.data.refreshToken);
-        }
-
-        // Navigation will be handled by the root navigator
-        // which will detect the authentication change
-        Alert.alert('Berhasil', 'Login berhasil!', [
-          { text: 'OK', onPress: () => navigation.navigate('Main' as never) },
-        ]);
-      } else {
-        Alert.alert('Error', response.message || 'Login gagal');
-      }
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Terjadi kesalahan saat login');
-    } finally {
-      setLoading(false);
+    if (!success && authStore.authError) {
+      Alert.alert('Login Gagal', authStore.authError);
     }
+    // Navigation will be handled automatically by RootNavigator
+    // when authStore.isAuthenticated becomes true
   };
 
   const handleSkipLogin = () => {
@@ -105,7 +90,7 @@ const LoginScreen: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              editable={!loading}
+              editable={!authStore.isLoading}
             />
           </View>
 
@@ -119,7 +104,7 @@ const LoginScreen: React.FC = () => {
                 onChangeText={text => setForm({ ...form, password: text })}
                 secureTextEntry={!showPassword}
                 autoComplete="password"
-                editable={!loading}
+                editable={!authStore.isLoading}
               />
               <TouchableOpacity
                 style={styles.eyeButton}
@@ -133,30 +118,33 @@ const LoginScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.forgotPassword}
             onPress={() => navigation.navigate('ForgotPassword' as never)}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
             <Text style={styles.forgotPasswordText}>Lupa Password?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.loginButton, loading && styles.disabledButton]}
+            style={[
+              styles.loginButton,
+              authStore.isLoading && styles.disabledButton,
+            ]}
             onPress={handleLogin}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
-            {loading ? (
+            {authStore.isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.loginButtonText}>Masuk</Text>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.skipButton}
             onPress={handleSkipLogin}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
             <Text style={styles.skipButtonText}>Lewati untuk sekarang</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Footer */}
@@ -164,7 +152,7 @@ const LoginScreen: React.FC = () => {
           <Text style={styles.footerText}>Belum punya akun?</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Register' as never)}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
             <Text style={styles.signupText}>Daftar di sini</Text>
           </TouchableOpacity>
@@ -172,7 +160,7 @@ const LoginScreen: React.FC = () => {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

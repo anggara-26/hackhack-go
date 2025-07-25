@@ -15,16 +15,17 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AuthService from '../../services/auth';
 import { RegisterForm } from '../../types';
+import { useAuthStore } from '@/src/stores/StoreProvider';
 
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation();
+  const authStore = useAuthStore();
   const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -50,33 +51,36 @@ const RegisterScreen: React.FC = () => {
       return;
     }
 
-    setLoading(true);
     try {
       const registerData = {
         name: form.name,
         email: form.email,
         password: form.password,
+        confirmPassword: form.confirmPassword,
       };
-      const response = await AuthService.register(form);
+      const response = await authStore.register(
+        form.email,
+        form.password,
+        form.name,
+      );
 
-      if (response.success) {
-        // Save refresh token if provided
-        if (response.data?.refreshToken) {
-          await AuthService.saveRefreshToken(response.data.refreshToken);
-        }
-
+      if (response) {
         Alert.alert(
           'Berhasil',
-          'Akun berhasil dibuat! Selamat datang di Museum AI.',
-          [{ text: 'OK', onPress: () => navigation.navigate('Main' as never) }],
+          'Akun berhasil dibuat! Selamat datang di Museyo.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.navigate('Login' as never),
+            },
+          ],
         );
       } else {
-        Alert.alert('Error', response.message || 'Pendaftaran gagal');
+        Alert.alert('Error', authStore.authError || 'Pendaftaran gagal');
       }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Terjadi kesalahan saat mendaftar');
     } finally {
-      setLoading(false);
     }
   };
 
@@ -112,7 +116,7 @@ const RegisterScreen: React.FC = () => {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
             <Text style={styles.backButtonText}>← Kembali</Text>
           </TouchableOpacity>
@@ -135,7 +139,7 @@ const RegisterScreen: React.FC = () => {
               onChangeText={text => setForm({ ...form, name: text })}
               autoCapitalize="words"
               autoComplete="name"
-              editable={!loading}
+              editable={!authStore.isLoading}
             />
           </View>
 
@@ -151,7 +155,7 @@ const RegisterScreen: React.FC = () => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
-              editable={!loading}
+              editable={!authStore.isLoading}
             />
           </View>
 
@@ -165,7 +169,7 @@ const RegisterScreen: React.FC = () => {
                 onChangeText={text => setForm({ ...form, password: text })}
                 secureTextEntry={!showPassword}
                 autoComplete="password-new"
-                editable={!loading}
+                editable={!authStore.isLoading}
               />
               <TouchableOpacity
                 style={styles.eyeButton}
@@ -200,7 +204,7 @@ const RegisterScreen: React.FC = () => {
                 }
                 secureTextEntry={!showConfirmPassword}
                 autoComplete="password-new"
-                editable={!loading}
+                editable={!authStore.isLoading}
               />
               <TouchableOpacity
                 style={styles.eyeButton}
@@ -218,11 +222,14 @@ const RegisterScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.registerButton, loading && styles.disabledButton]}
+            style={[
+              styles.registerButton,
+              authStore.isLoading && styles.disabledButton,
+            ]}
             onPress={handleRegister}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
-            {loading ? (
+            {authStore.isLoading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={styles.registerButtonText}>Daftar</Text>
@@ -235,7 +242,7 @@ const RegisterScreen: React.FC = () => {
           <Text style={styles.footerText}>Sudah punya akun?</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('Login' as never)}
-            disabled={loading}
+            disabled={authStore.isLoading}
           >
             <Text style={styles.loginText}>Masuk di sini</Text>
           </TouchableOpacity>

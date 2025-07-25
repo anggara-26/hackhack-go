@@ -302,7 +302,7 @@ export const getChatHistory = errorHOC(
         query.userId = null; // Anonymous sessions
       }
 
-      const chatSessions = await ChatSession.find(query)
+      const chatSessions = await ChatSession.find({ _id: sessionId })
         .populate(
           "artifactId",
           "identificationResult.name identificationResult.category imageUrl"
@@ -312,13 +312,30 @@ export const getChatHistory = errorHOC(
         .limit(limit)
         .lean();
 
+      if (!chatSessions || chatSessions.length === 0) {
+        res.json({
+          success: true,
+          data: {
+            chatSessions: [],
+            pagination: {
+              page,
+              limit,
+              total: 0,
+              pages: 0,
+            },
+          },
+        });
+        return;
+      }
+
       // Add message count and last message to each session
-      const sessionsWithDetails = chatSessions.map((session) => ({
-        ...session,
-        messageCount: session.messages.length,
-        lastMessage: session.messages[session.messages.length - 1] || null,
-        hasRating: !!session.rating,
-      }));
+      const sessionsWithDetails = {
+        ...chatSessions[0],
+        messageCount: chatSessions[0].messages.length,
+        lastMessage:
+          chatSessions[0].messages[chatSessions[0].messages.length - 1] || null,
+        hasRating: !!chatSessions[0].rating,
+      };
 
       const total = await ChatSession.countDocuments(query);
 
@@ -377,6 +394,38 @@ export const deleteChatSession = errorHOC(
       res.status(500).json({
         success: false,
         message: "Failed to delete chat session",
+        error: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * Get chat session from artifact
+ */
+export const getChatSessionFromArtifact = errorHOC(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { artifactId } = req.params;
+
+      const chatSession = await ChatSession.findOne({ artifactId });
+      if (!chatSession) {
+        res.status(404).json({
+          success: false,
+          message: "Chat session not found",
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: chatSession,
+      });
+    } catch (error: any) {
+      console.error("Error getting chat session from artifact:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get chat session from artifact",
         error: error.message,
       });
     }

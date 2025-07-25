@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,74 +7,141 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '../hooks/useNavigation';
 import { useRoute } from '@react-navigation/native';
 import { Artifact } from '../types';
+import { ChatService } from '../services/chat';
+import ArtifactService from '../services/artifact';
 
 const ArtifactResultScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  // const { artifact } = route.params as { artifact: Artifact };
+  const { artifact } = route.params as { artifact: Artifact };
 
-  // Placeholder data
-  const mockArtifact: Artifact = {
-    _id: '1',
-    imageUrl: 'placeholder.jpg',
-    originalFilename: 'artifact.jpg',
-    identificationResult: {
-      name: 'Keris Majapahit',
-      category: 'Senjata Tradisional',
-      description:
-        'Keris tradisional dari era Majapahit dengan motif yang indah dan makna spiritual yang mendalam.',
-      history:
-        'Digunakan oleh ksatria Majapahit pada abad ke-14 untuk upacara dan perlindungan diri.',
-      confidence: 0.89,
-      isRecognized: true,
-      culturalSignificance:
-        'Simbol kekuatan dan spiritualitas dalam budaya Jawa',
-      estimatedAge: 'Abad 14-15',
-      materials: 'Besi, baja, dan ukiran emas',
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+
+  const handleStartChat = async () => {
+    try {
+      setIsCreatingSession(true);
+
+      // Start a chat session with the backend
+      const result = await ChatService.getChatSessionFromArtifact(artifact._id);
+      console.log('Chat session result:', result);
+      if (result.success && result.data && result.data._id) {
+        navigation.navigate('Chat', {
+          sessionId: result.data._id,
+          artifact: artifact,
+        });
+      } else {
+        Alert.alert(
+          'Error',
+          result.error || 'Gagal memulai percakapan. Coba lagi.',
+          [{ text: 'OK' }],
+        );
+      }
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      Alert.alert(
+        'Error',
+        'Terjadi kesalahan saat memulai percakapan. Periksa koneksi internet Anda.',
+        [{ text: 'OK' }],
+      );
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+  //   Not used, change logic
+  //   const handleStartChat = async () => {
+  //     try {
+  //       setIsCreatingSession(true);
+
+  //       // Start a chat session with the backend
+  //       const result = await ChatService.startChatSession(artifact._id);
+
+  //       if (result.success && result.data) {
+  //         navigation.navigate('Chat', {
+  //           sessionId: result.data.sessionId,
+  //           artifact: artifact,
+  //         });
+  //       } else {
+  //         Alert.alert(
+  //           'Error',
+  //           result.error || 'Gagal memulai percakapan. Coba lagi.',
+  //           [{ text: 'OK' }],
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error('Error starting chat:', error);
+  //       Alert.alert(
+  //         'Error',
+  //         'Terjadi kesalahan saat memulai percakapan. Periksa koneksi internet Anda.',
+  //         [{ text: 'OK' }],
+  //       );
+  //     } finally {
+  //       setIsCreatingSession(false);
+  //     }
+  //   };
+
+  const handleShare = async () => {
+    try {
+      // In a real app, you would use react-native-share
+      Alert.alert(
+        'Bagikan Artefak',
+        `Bagikan "${artifact.identificationResult.name}" ke social media atau platform lainnya?`,
+        [
+          { text: 'Batal', style: 'cancel' },
+          {
+            text: 'Bagikan',
+            onPress: () => {
+              // Placeholder for actual share functionality
+              Alert.alert('Berhasil', 'Link telah disalin ke clipboard!');
+            },
+          },
+        ],
+      );
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Gagal membagikan artefak.');
+    }
   };
 
-  const handleStartChat = () => {
-    navigation.navigate('Chat', {
-      sessionId: 'mock_session',
-      artifact: mockArtifact,
-    });
-  };
-
-  const handleShare = () => {
-    Alert.alert(
-      'Share Feature',
-      'Share functionality will be implemented with react-native-share',
-      [{ text: 'OK' }],
-    );
-  };
-
-  const handleAddToFavorites = () => {
-    Alert.alert(
-      'Favorites',
-      'Artifact added to favorites! (This is a placeholder)',
-      [{ text: 'OK' }],
-    );
+  const handleAddToFavorites = async () => {
+    try {
+      // In a real app, you would save to backend or local storage
+      Alert.alert(
+        'Tambah ke Favorit',
+        `"${artifact.identificationResult.name}" telah ditambahkan ke favorit Anda!`,
+        [{ text: 'OK' }],
+      );
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+      Alert.alert('Error', 'Gagal menambahkan ke favorit.');
+    }
   };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Artifact Image */}
       <View style={styles.imageContainer}>
-        <View style={styles.imagePlaceholder}>
-          <Text style={styles.imagePlaceholderText}>🏺</Text>
-        </View>
+        {artifact.imageUrl ? (
+          <Image
+            source={{ uri: ArtifactService.getImageUrl(artifact.imageUrl) }}
+            style={styles.artifactImage}
+            onError={error => {
+              console.log('Image load error:', error);
+            }}
+          />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Text style={styles.imagePlaceholderText}>🏺</Text>
+          </View>
+        )}
 
         <View style={styles.confidenceContainer}>
           <Text style={styles.confidenceText}>
-            {Math.round(mockArtifact.identificationResult.confidence * 100)}%
-            yakin
+            {Math.round(artifact.identificationResult.confidence * 100)}% yakin
           </Text>
         </View>
       </View>
@@ -83,7 +150,7 @@ const ArtifactResultScreen: React.FC = () => {
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.artifactName}>
-            {mockArtifact.identificationResult.name}
+            {artifact.identificationResult.name}
           </Text>
           <TouchableOpacity
             style={styles.favoriteButton}
@@ -94,14 +161,14 @@ const ArtifactResultScreen: React.FC = () => {
         </View>
 
         <Text style={styles.category}>
-          {mockArtifact.identificationResult.category}
+          {artifact.identificationResult.category}
         </Text>
 
         {/* Description */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Deskripsi</Text>
           <Text style={styles.sectionContent}>
-            {mockArtifact.identificationResult.description}
+            {artifact.identificationResult.description}
           </Text>
         </View>
 
@@ -109,7 +176,7 @@ const ArtifactResultScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sejarah</Text>
           <Text style={styles.sectionContent}>
-            {mockArtifact.identificationResult.history}
+            {artifact.identificationResult.history}
           </Text>
         </View>
 
@@ -119,29 +186,47 @@ const ArtifactResultScreen: React.FC = () => {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Periode:</Text>
             <Text style={styles.detailValue}>
-              {mockArtifact.identificationResult.estimatedAge}
+              {artifact.identificationResult.estimatedAge}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Bahan:</Text>
             <Text style={styles.detailValue}>
-              {mockArtifact.identificationResult.materials}
+              {artifact.identificationResult.materials}
             </Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Makna Budaya:</Text>
             <Text style={styles.detailValue}>
-              {mockArtifact.identificationResult.culturalSignificance}
+              {artifact.identificationResult.culturalSignificance}
             </Text>
           </View>
         </View>
 
         {/* Action Buttons */}
         <View style={styles.actionSection}>
-          <TouchableOpacity style={styles.chatButton} onPress={handleStartChat}>
-            <Text style={styles.chatButtonText}>
-              💬 Ngobrol Sama Benda Ini!
-            </Text>
+          <TouchableOpacity
+            style={[
+              styles.chatButton,
+              isCreatingSession && styles.chatButtonDisabled,
+            ]}
+            onPress={handleStartChat}
+            disabled={isCreatingSession}
+          >
+            {isCreatingSession ? (
+              <View style={styles.buttonContent}>
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.buttonLoader}
+                />
+                <Text style={styles.chatButtonText}>Memulai percakapan...</Text>
+              </View>
+            ) : (
+              <Text style={styles.chatButtonText}>
+                💬 Ngobrol Sama Benda Ini!
+              </Text>
+            )}
           </TouchableOpacity>
 
           <View style={styles.secondaryActions}>
@@ -157,6 +242,45 @@ const ArtifactResultScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
+        {/* Not used, change logic */}
+        {/* <View style={styles.actionSection}>
+          <TouchableOpacity
+            style={[
+              styles.chatButton,
+              isCreatingSession && styles.chatButtonDisabled,
+            ]}
+            onPress={handleStartChat}
+            disabled={isCreatingSession}
+          >
+            {isCreatingSession ? (
+              <View style={styles.buttonContent}>
+                <ActivityIndicator
+                  size="small"
+                  color="#fff"
+                  style={styles.buttonLoader}
+                />
+                <Text style={styles.chatButtonText}>Memulai percakapan...</Text>
+              </View>
+            ) : (
+              <Text style={styles.chatButtonText}>
+                💬 Ngobrol Sama Benda Ini!
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.secondaryActions}>
+            <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+              <Text style={styles.shareButtonText}>📤 Bagikan</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleAddToFavorites}
+            >
+              <Text style={styles.saveButtonText}>💾 Simpan</Text>
+            </TouchableOpacity>
+          </View>
+        </View> */}
       </View>
     </ScrollView>
   );
@@ -177,6 +301,11 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  artifactImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   imagePlaceholderText: {
     fontSize: 100,
@@ -266,6 +395,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  chatButtonDisabled: {
+    backgroundColor: '#9ca3af',
+    shadowColor: '#9ca3af',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonLoader: {
+    marginRight: 8,
   },
   chatButtonText: {
     fontSize: 18,

@@ -66,12 +66,18 @@ export class ChatService {
   }
 
   // Get chat history
-  static async getChatHistory(
-    sessionId: string,
-  ): Promise<ApiResponse<ChatSession>> {
-    return ApiService.get<ApiResponse<ChatSession>>(
-      `/chat/history/${sessionId}`,
-    );
+  static async getChatHistory(sessionId: string): Promise<
+    ApiResponse<{
+      chatSessions: ChatSession;
+      pagination: { page: number; limit: 20; total: number; pages: number };
+    }>
+  > {
+    return ApiService.get<
+      ApiResponse<{
+        chatSessions: ChatSession;
+        pagination: { page: number; limit: 20; total: number; pages: number };
+      }>
+    >(`/chat/history?sessionId=${sessionId}`);
   }
 
   // Get all chat sessions for user
@@ -189,7 +195,7 @@ export class ChatService {
       shareText += `${speaker}: ${msg.content}\n\n`;
     });
 
-    shareText += `\n🚀 Dicoba pakai Museum AI App!`;
+    shareText += `\n🚀 Dicoba pakai Museyo App!`;
     return shareText;
   }
 
@@ -237,6 +243,28 @@ export class ChatService {
       return ratings[sessionId] || null;
     } catch (error) {
       return null;
+    }
+  }
+
+  // getChatSessionFromArtifact
+  static async getChatSessionFromArtifact(
+    artifactId: string,
+  ): Promise<{ success: boolean; data: ChatSession }> {
+    try {
+      const response = await ApiService.get<any>(
+        `/chat/get-artifact-session/${artifactId}`,
+      );
+
+      if (!response || !response.data) {
+        throw new Error('No chat session found for this artifact');
+      }
+
+      console.log('Chat session from artifact:', response);
+
+      return response;
+    } catch (error) {
+      console.error('Error getting chat session from artifact:', error);
+      throw error;
     }
   }
 }

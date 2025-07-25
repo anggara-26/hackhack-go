@@ -166,7 +166,9 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.welcomeText}>
             Halo {user ? user.name.split(' ')[0] : 'Explorer'}! 👋
           </Text>
-          <Text style={styles.subtitle}>Siap jadi penjelajah museum?</Text>
+          <Text style={styles.subtitle}>
+            Siap jadi penjelajah para benda bersejarah?
+          </Text>
         </View>
 
         {user && (
@@ -245,7 +247,9 @@ const HomeScreen: React.FC = () => {
       {/* Popular Artifacts */}
       {popularArtifacts.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Artefak Populer</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Artefak Populer</Text>
+          </View>
 
           <View style={styles.popularGrid}>
             {popularArtifacts.map((artifact, index) => (
@@ -442,6 +446,7 @@ const styles = StyleSheet.create({
   },
   horizontalScroll: {
     paddingLeft: 20,
+    paddingVertical: 10,
   },
   artifactCard: {
     backgroundColor: '#fff',

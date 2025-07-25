@@ -74,7 +74,7 @@ export interface ChatSession {
   _id: string;
   artifactId: string;
   userId?: string;
-  sessionId?: string;
+  // sessionId?: string;
   messages: ChatMessage[];
   rating?: 'up' | 'down';
   createdAt: string;

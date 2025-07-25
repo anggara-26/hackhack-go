@@ -10,55 +10,116 @@ import {
   Platform,
   Alert,
   Dimensions,
+  Keyboard,
 } from 'react-native';
 import { useNavigation } from '../hooks/useNavigation';
 import { useRoute } from '@react-navigation/native';
-import { ChatMessage, Artifact } from '../types';
+import { ChatMessage, Artifact, MessageChunk, MessageComplete } from '../types';
+import ChatService from '../services/chat';
+import socketService from '../services/socket';
 
 const { width } = Dimensions.get('window');
 
 const ChatScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  // const { sessionId, artifact } = route.params as { sessionId: string; artifact: Artifact };
-
-  // Mock data for demonstration
-  const mockArtifact: Artifact = {
-    _id: '1',
-    imageUrl: 'placeholder.jpg',
-    originalFilename: 'artifact.jpg',
-    identificationResult: {
-      name: 'Keris Majapahit',
-      category: 'Senjata Tradisional',
-      description: 'Keris tradisional dari era Majapahit',
-      history: 'Digunakan oleh ksatria Majapahit',
-      confidence: 0.89,
-      isRecognized: true,
-    },
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+  const { sessionId, artifact } = route.params as {
+    sessionId: string;
+    artifact: Artifact;
   };
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'assistant',
-      content:
-        'Halo! Aku adalah Keris Majapahit! 🗡️ Senang bisa ngobrol denganmu. Aku sudah berusia ratusan tahun lho! Ada yang ingin kamu tanyakan tentang sejarahku?',
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [rating, setRating] = useState<'up' | 'down' | null>(null);
+  const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const quickQuestions = [
-    'Tanya umur gua dong!',
-    'Kenapa gua penting?',
-    'Fun fact tentang gua dong!',
-    'Gimana cara gua dibuat?',
-    'Siapa yang biasa pake gua dulu?',
-  ];
+  useEffect(() => {
+    initializeChat();
+    setupSocketListeners();
+
+    return () => {
+      socketService.disconnect();
+    };
+  }, []);
+
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true); // or some other action
+      },
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false); // or some other action
+      },
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
+  const initializeChat = async () => {
+    try {
+      // Initialize socket connection
+      await socketService.connect();
+      await socketService.joinChat(sessionId);
+
+      // Get chat history
+      const historyResponse = await ChatService.getChatHistory(sessionId);
+      if (historyResponse.success && historyResponse.data) {
+        setMessages(historyResponse.data.chatSessions.messages);
+        setQuickQuestions(
+          historyResponse.data.chatSessions.quickQuestions || [],
+        );
+      }
+
+      // If no messages, add welcome message
+      if (!historyResponse.data?.chatSessions.messages.length) {
+        const welcomeMessage: ChatMessage = {
+          role: 'assistant',
+          content: `Halo! Aku adalah ${artifact.identificationResult.name}! 🏺 Senang bisa ngobrol denganmu. Ada yang ingin kamu tanyakan tentang sejarahku?`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages([welcomeMessage]);
+
+        // Set default quick questions
+        setQuickQuestions([
+          'Tanya umur gua dong!',
+          'Kenapa gua penting?',
+          'Fun fact tentang gua dong!',
+          'Gimana cara gua dibuat?',
+          'Siapa yang biasa pake gua dulu?',
+        ]);
+      }
+    } catch (error) {
+      console.error('Error initializing chat:', error);
+      Alert.alert('Error', 'Gagal memulai chat. Coba lagi nanti.');
+    }
+  };
+
+  const setupSocketListeners = () => {
+    // Listen for incoming messages
+    socketService.on('message_received', (data: { message: ChatMessage }) => {
+      setMessages(prev => [...prev, data.message]);
+    });
+
+    // Listen for AI typing
+    socketService.on('ai_typing', () => {
+      setIsTyping(true);
+    });
+
+    socketService.on('ai_stopped_typing', () => {
+      setIsTyping(false);
+    });
+  };
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -70,79 +131,107 @@ const ChatScreen: React.FC = () => {
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: inputText.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputText('');
-    setIsTyping(true);
-
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        'Wah, pertanyaan yang menarik! 🤔 Sebagai keris berusia ratusan tahun, aku sudah melihat banyak sekali peristiwa sejarah. Ceritanya panjang nih!',
-        'Hehe, aku senang kamu tertarik dengan sejarahku! 😊 Dulu aku dipakai sama ksatria Majapahit yang sangat pemberani lho!',
-        'Itu pertanyaan bagus banget! ✨ Aku punya banyak cerita seru tentang masa lalu. Mau dengerin?',
-        'Wahhh, jarang-jarang ada yang nanya hal itu! 🙌 Aku excited bisa cerita sama kamu!',
-      ];
-
-      const randomResponse =
-        responses[Math.floor(Math.random() * responses.length)];
-
-      const aiMessage: ChatMessage = {
-        role: 'assistant',
-        content: randomResponse,
+    try {
+      const userMessage: ChatMessage = {
+        role: 'user',
+        content: inputText.trim(),
         timestamp: new Date().toISOString(),
       };
 
-      setMessages(prev => [...prev, aiMessage]);
-      setIsTyping(false);
-    }, 2000);
+      setMessages(prev => [...prev, userMessage]);
+      const currentInput = inputText.trim();
+      setInputText('');
+      setIsTyping(true);
+
+      // Send via socket for real-time delivery
+      socketService.sendMessage(
+        sessionId,
+        currentInput,
+        (chunk: MessageChunk) => {
+          // Handle streaming response chunks
+          console.log('Received chunk:', chunk);
+        },
+        (complete: MessageComplete) => {
+          // Handle complete response
+          const aiMessage: ChatMessage = {
+            role: 'assistant',
+            content: complete.fullResponse,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, aiMessage]);
+          setIsTyping(false);
+        },
+        (error: Error) => {
+          console.error('Socket error:', error);
+          setIsTyping(false);
+          Alert.alert('Error', 'Gagal mengirim pesan via socket.');
+        },
+      );
+    } catch (error) {
+      console.error('Error sending message:', error);
+      Alert.alert('Error', 'Gagal mengirim pesan.');
+    }
   };
 
-  const handleQuickQuestion = (question: string) => {
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: question,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
-
-    // Simulate AI response for quick questions
-    setTimeout(() => {
-      let response = '';
-
-      if (question.includes('umur')) {
-        response =
-          'Aku sudah berusia sekitar 600-700 tahun nih! 👴 Dibuat pada masa kejayaan Majapahit di abad ke-14. Masih cukup muda kan untuk ukuran artefak? Hehe! 😄';
-      } else if (question.includes('penting')) {
-        response =
-          'Aku penting karena jadi saksi sejarah Nusantara! 🏛️ Selain sebagai senjata, aku juga punya makna spiritual dan jadi simbol kekuatan ksatria. Keren ya? ✨';
-      } else if (question.includes('fun fact')) {
-        response =
-          'Fun fact: Aku bukan cuma senjata biasa lho! 🌟 Bilah-ku dibuat dengan teknik lipat berkali-kali, makanya motifnya unik. Dan katanya aku punya kekuatan magis! 🪄';
-      } else if (question.includes('dibuat')) {
-        response =
-          "Proses pembuatanku butuh berbulan-bulan! 🔨 Empu (pandai besi) harus melipat besi berkali-kali sambil berdoa. Setiap keris punya 'jiwa' sendiri lho! Mistis banget kan? 👻";
-      } else {
-        response =
-          'Dulu aku dipakai sama para ksatria dan bangsawan Majapahit! 👑 Bukan sembarang orang yang bisa memiliki keris seperti aku. Aku simbol status dan kehormatan! 🎖️';
-      }
-
-      const aiMessage: ChatMessage = {
-        role: 'assistant',
-        content: response,
+  const handleQuickQuestion = async (question: string) => {
+    try {
+      const userMessage: ChatMessage = {
+        role: 'user',
+        content: question,
         timestamp: new Date().toISOString(),
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages(prev => [...prev, userMessage]);
+      setIsTyping(true);
+
+      // Send quick question via socket
+      socketService.sendQuickQuestion(
+        sessionId,
+        question,
+        (chunk: MessageChunk) => {
+          console.log('Quick question chunk:', chunk);
+        },
+        (complete: MessageComplete) => {
+          const aiMessage: ChatMessage = {
+            role: 'assistant',
+            content: complete.fullResponse,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, aiMessage]);
+          setIsTyping(false);
+        },
+        (error: Error) => {
+          console.error('Quick question error:', error);
+          setIsTyping(false);
+          // Fallback to predefined responses for demo
+          let response = '';
+
+          if (question.includes('umur')) {
+            response = `Aku sudah berusia sekitar 600-700 tahun nih! 👴 Dibuat pada masa kejayaan ${artifact.identificationResult.category} di abad ke-14. Masih cukup muda kan untuk ukuran artefak? Hehe! 😄`;
+          } else if (question.includes('penting')) {
+            response =
+              'Aku penting karena jadi saksi sejarah Nusantara! 🏛️ Selain sebagai senjata, aku juga punya makna spiritual dan jadi simbol kekuatan ksatria. Keren ya? ✨';
+          } else if (question.includes('fun fact')) {
+            response = `Fun fact: Aku bukan cuma ${artifact.identificationResult.category} biasa lho! 🌟 Dibuat dengan teknik yang unik dan punya cerita menarik di baliknya! 🪄`;
+          } else if (question.includes('dibuat')) {
+            response =
+              'Proses pembuatanku butuh waktu lama! 🔨 Dibuat oleh ahli yang sangat terampil dengan teknik tradisional. Setiap detailnya punya makna sendiri lho! 👻';
+          } else {
+            response = `Dulu aku dipakai sama orang-orang penting di masa ${artifact.identificationResult.category}! 👑 Bukan sembarang orang yang bisa memiliki seperti aku. Aku simbol status dan kehormatan! 🎖️`;
+          }
+
+          const aiMessage: ChatMessage = {
+            role: 'assistant',
+            content: response,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages(prev => [...prev, aiMessage]);
+        },
+      );
+    } catch (error) {
+      console.error('Error handling quick question:', error);
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleRating = (newRating: 'up' | 'down') => {
@@ -213,97 +302,101 @@ const ChatScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>←</Text>
-        </TouchableOpacity>
+    <>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={styles.backButton}>←</Text>
+          </TouchableOpacity>
 
-        <View style={styles.headerInfo}>
-          <Text style={styles.artifactName}>
-            {mockArtifact.identificationResult.name}
-          </Text>
-          <Text style={styles.artifactStatus}>Online • Siap ngobrol</Text>
+          <View style={styles.headerInfo}>
+            <Text style={styles.artifactName}>
+              {artifact.identificationResult.name}
+            </Text>
+            <Text style={styles.artifactStatus}>Online • Siap ngobrol</Text>
+          </View>
+
+          <TouchableOpacity onPress={handleShare}>
+            <Text style={styles.shareButton}>📤</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={handleShare}>
-          <Text style={styles.shareButton}>📤</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Messages */}
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.messagesContainer}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[
+            styles.messagesContent,
+            { paddingBottom: isKeyboardVisible ? 180 : 80 },
+          ]}
+        >
+          {messages.map((message, index) => renderMessage(message, index))}
 
-      {/* Messages */}
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.messagesContainer}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.messagesContent}
-      >
-        {messages.map((message, index) => renderMessage(message, index))}
-
-        {isTyping && (
-          <View style={styles.typingContainer}>
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>🏺</Text>
-            </View>
-            <View style={styles.typingBubble}>
-              <Text style={styles.typingText}>Sedang mengetik...</Text>
-              <View style={styles.typingDots}>
-                <View style={[styles.dot, styles.dot1]} />
-                <View style={[styles.dot, styles.dot2]} />
-                <View style={[styles.dot, styles.dot3]} />
+          {isTyping && (
+            <View style={styles.typingContainer}>
+              <View style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>🏺</Text>
               </View>
+              <View style={styles.typingBubble}>
+                <Text style={styles.typingText}>Sedang mengetik...</Text>
+                <View style={styles.typingDots}>
+                  <View style={[styles.dot, styles.dot1]} />
+                  <View style={[styles.dot, styles.dot2]} />
+                  <View style={[styles.dot, styles.dot3]} />
+                </View>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Quick Questions */}
+        {messages.length === 1 && (
+          <View style={styles.quickQuestionsContainer}>
+            <Text style={styles.quickQuestionsTitle}>Pertanyaan Cepat:</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickQuestions}
+            >
+              {quickQuestions.map((question, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.quickQuestionButton}
+                  onPress={() => handleQuickQuestion(question)}
+                >
+                  <Text style={styles.quickQuestionText}>{question}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Rating Section */}
+        {messages.length > 3 && !rating && (
+          <View style={styles.ratingContainer}>
+            <Text style={styles.ratingText}>Gimana percakapannya?</Text>
+            <View style={styles.ratingButtons}>
+              <TouchableOpacity
+                style={styles.ratingButton}
+                onPress={() => handleRating('up')}
+              >
+                <Text style={styles.ratingEmoji}>👍</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.ratingButton}
+                onPress={() => handleRating('down')}
+              >
+                <Text style={styles.ratingEmoji}>👎</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
-      </ScrollView>
-
-      {/* Quick Questions */}
-      {messages.length === 1 && (
-        <View style={styles.quickQuestionsContainer}>
-          <Text style={styles.quickQuestionsTitle}>Pertanyaan Cepat:</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickQuestions}
-          >
-            {quickQuestions.map((question, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.quickQuestionButton}
-                onPress={() => handleQuickQuestion(question)}
-              >
-                <Text style={styles.quickQuestionText}>{question}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Rating Section */}
-      {messages.length > 3 && !rating && (
-        <View style={styles.ratingContainer}>
-          <Text style={styles.ratingText}>Gimana percakapannya?</Text>
-          <View style={styles.ratingButtons}>
-            <TouchableOpacity
-              style={styles.ratingButton}
-              onPress={() => handleRating('up')}
-            >
-              <Text style={styles.ratingEmoji}>👍</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.ratingButton}
-              onPress={() => handleRating('down')}
-            >
-              <Text style={styles.ratingEmoji}>👎</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
+      </KeyboardAvoidingView>
       {/* Input */}
       <View style={styles.inputContainer}>
         <TextInput
@@ -325,7 +418,7 @@ const ChatScreen: React.FC = () => {
           <Text style={styles.sendButtonText}>📨</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </>
   );
 };
 
@@ -521,6 +614,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   inputContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 16,
