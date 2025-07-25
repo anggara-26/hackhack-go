@@ -28,8 +28,18 @@ const onboardingData: OnboardingSlide[] = [
     title: 'Selamat Datang di Museyo',
     description:
       'Jelajahi dunia artefak bersejarah dengan bantuan kecerdasan buatan yang canggih',
-    image: '🏛️',
-    backgroundColor: '#6366f1',
+    image: (
+      <Image
+        source={require('../assets/logo-white.png')}
+        style={{
+          width: 180,
+          height: 60,
+          marginBottom: 20,
+          resizeMode: 'contain',
+        }}
+      />
+    ),
+    backgroundColor: '#7B7B7D',
   },
   {
     id: '2',
@@ -37,7 +47,7 @@ const onboardingData: OnboardingSlide[] = [
     description:
       'Ambil foto artefak apapun dan dapatkan informasi detail tentang sejarah dan budayanya',
     image: '📸',
-    backgroundColor: '#8b5cf6',
+    backgroundColor: '#565656',
   },
   {
     id: '3',
@@ -45,7 +55,7 @@ const onboardingData: OnboardingSlide[] = [
     description:
       'Berbincang langsung dengan artefak! Tanya tentang sejarah, cerita, dan pengalaman mereka',
     image: '💬',
-    backgroundColor: '#06b6d4',
+    backgroundColor: '#7B7B7D',
   },
   {
     id: '4',
@@ -53,7 +63,7 @@ const onboardingData: OnboardingSlide[] = [
     description:
       'Simpan semua penemuan Anda dan akses kembali kapan saja untuk belajar lebih dalam',
     image: '📚',
-    backgroundColor: '#10b981',
+    backgroundColor: '#565656',
   },
 ];
 

@@ -160,6 +160,26 @@ const HomeScreen: React.FC = () => {
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       }
     >
+      {/* Logo */}
+      <View
+        style={{
+          width: '100%',
+          alignItems: 'flex-start',
+          marginTop: 20,
+          justifyContent: 'flex-start',
+          paddingHorizontal: 20,
+        }}
+      >
+        <Image
+          source={require('../assets/logo.png')}
+          style={{
+            width: 100,
+            height: 30,
+            resizeMode: 'contain',
+          }}
+        />
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.welcomeSection}>
@@ -193,6 +213,7 @@ const HomeScreen: React.FC = () => {
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
+            readOnly={true}
           />
           <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
             <Text style={styles.searchButtonText}>🔍</Text>
@@ -336,7 +357,7 @@ const styles = StyleSheet.create({
   profileButton: {
     width: 40,
     height: 40,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -380,12 +401,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   primaryAction: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#6366f1',
+    shadowColor: '#7B7B7D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -403,7 +424,7 @@ const styles = StyleSheet.create({
   },
   actionSubtext: {
     fontSize: 14,
-    color: '#e0e7ff',
+    color: '#F0F0F0',
     textAlign: 'center',
   },
   secondaryAction: {
@@ -441,7 +462,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 14,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '500',
   },
   horizontalScroll: {
@@ -567,7 +588,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   emptyStateButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,

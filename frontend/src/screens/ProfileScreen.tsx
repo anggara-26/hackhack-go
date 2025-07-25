@@ -42,21 +42,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Apakah Anda yakin ingin keluar?', [
-      { text: 'Batal', style: 'cancel' },
-      {
-        text: 'Logout',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await authStore.logout();
-            navigation.navigate('Home');
-          } catch (error) {
-            Alert.alert('Error', 'Gagal logout');
-          }
-        },
-      },
-    ]);
+    authStore.logout();
   };
 
   if (!isAuthenticated) {
@@ -134,7 +120,10 @@ const ProfileScreen: React.FC = () => {
 
         {/* Logout */}
         <View style={styles.logoutSection}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => handleLogout()}
+          >
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -189,7 +178,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   loginButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     paddingHorizontal: 40,
     paddingVertical: 16,
     borderRadius: 12,
@@ -209,7 +198,7 @@ const styles = StyleSheet.create({
   avatarContainer: {
     width: 80,
     height: 80,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',

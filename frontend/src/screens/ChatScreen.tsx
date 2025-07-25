@@ -320,9 +320,9 @@ const ChatScreen: React.FC = () => {
             <Text style={styles.artifactStatus}>Online • Siap ngobrol</Text>
           </View>
 
-          <TouchableOpacity onPress={handleShare}>
+          {/* <TouchableOpacity onPress={handleShare}>
             <Text style={styles.shareButton}>📤</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Rating Section */}
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 24,
-    color: '#6366f1',
+    color: '#7B7B7D',
     marginRight: 12,
   },
   headerInfo: {
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   userBubble: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderBottomRightRadius: 4,
   },
   aiBubble: {
@@ -646,7 +646,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonActive: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
   },
   sendButtonText: {
     fontSize: 20,

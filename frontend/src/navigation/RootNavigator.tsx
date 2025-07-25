@@ -15,6 +15,7 @@ import CameraScreen from '../screens/CameraScreen';
 import PhotoPreviewScreen from '../screens/PhotoPreviewScreen';
 import ArtifactResultScreen from '../screens/ArtifactResultScreen';
 import ChatScreen from '../screens/ChatScreen';
+import VoiceCallScreen from '../screens/VoiceCallScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
@@ -47,7 +48,7 @@ function MainTabs() {
           paddingTop: 5,
           height: 60,
         },
-        tabBarActiveTintColor: '#6366f1',
+        tabBarActiveTintColor: '#7B7B7D',
         tabBarInactiveTintColor: '#9ca3af',
         tabBarLabelStyle: {
           fontSize: 12,
@@ -61,7 +62,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Beranda',
           tabBarIcon: ({ color, size, focused }) => (
-            <House fill={focused ? color : 'transparent'} />
+            <House fill={focused ? '#7B7B7D' : 'transparent'} />
           ),
         }}
       />
@@ -71,7 +72,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Kamera',
           tabBarIcon: ({ color, size, focused }) => (
-            <Camera fill={focused ? color : 'transparent'} />
+            <Camera fill={focused ? '#7B7B7D' : 'transparent'} />
           ),
         }}
       />
@@ -81,7 +82,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Riwayat',
           tabBarIcon: ({ color, size, focused }) => (
-            <GalleryHorizontalEnd fill={focused ? color : 'transparent'} />
+            <GalleryHorizontalEnd fill={focused ? '#7B7B7D' : 'transparent'} />
           ),
         }}
       />
@@ -91,7 +92,7 @@ function MainTabs() {
         options={{
           tabBarLabel: 'Profil',
           tabBarIcon: ({ color, size, focused }) => (
-            <User fill={focused ? color : 'transparent'} />
+            <User fill={focused ? '#7B7B7D' : 'transparent'} />
           ),
         }}
       />
@@ -189,7 +190,7 @@ const RootNavigator = observer(() => {
                 headerShown: true,
                 title: 'Hasil Identifikasi',
                 headerBackTitleVisible: false,
-                headerTintColor: '#6366f1',
+                headerTintColor: '#7B7B7D',
               }}
             />
             <Stack.Screen
@@ -198,7 +199,15 @@ const RootNavigator = observer(() => {
               options={{
                 headerShown: true,
                 title: 'Chat dengan Artefak',
-                headerTintColor: '#6366f1',
+                headerTintColor: '#7B7B7D',
+              }}
+            />
+            <Stack.Screen
+              name="VoiceCall"
+              component={VoiceCallScreen}
+              options={{
+                headerShown: false,
+                presentation: 'modal',
               }}
             />
           </>

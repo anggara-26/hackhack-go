@@ -11,6 +11,7 @@ import {
   Platform,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AuthService from '../../services/auth';
@@ -121,7 +122,15 @@ const RegisterScreen: React.FC = () => {
             <Text style={styles.backButtonText}>← Kembali</Text>
           </TouchableOpacity>
 
-          <Text style={styles.logo}>🏛️</Text>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{
+              width: 120,
+              height: 40,
+              marginBottom: 20,
+              resizeMode: 'contain',
+            }}
+          />
           <Text style={styles.title}>Buat Akun Baru</Text>
           <Text style={styles.subtitle}>
             Daftar untuk menyimpan koleksi dan riwayat penemuan Anda
@@ -273,7 +282,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '500',
   },
   logo: {
@@ -348,7 +357,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   registerButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -375,7 +384,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '600',
   },
 });

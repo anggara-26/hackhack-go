@@ -167,7 +167,7 @@ const HistoryScreen: React.FC = observer(() => {
           <Text style={styles.title}>Riwayat Penemuan</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color="#7B7B7D" />
           <Text style={styles.loadingText}>Loading history...</Text>
         </View>
       </View>
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   exploreButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   },
   itemCategory: {
     fontSize: 12,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '600',
     textTransform: 'capitalize',
     marginBottom: 6,

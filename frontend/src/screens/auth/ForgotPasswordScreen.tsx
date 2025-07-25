@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   backButtonSmallText: {
     fontSize: 16,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '500',
   },
   logo: {
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   sendButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '600',
   },
   // Success screen styles
@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   },
   emailText: {
     fontWeight: '600',
-    color: '#6366f1',
+    color: '#7B7B7D',
   },
   instructionText: {
     fontSize: 14,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   backButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 8,
     paddingVertical: 16,
     paddingHorizontal: 40,

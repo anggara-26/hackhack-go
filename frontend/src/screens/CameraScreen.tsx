@@ -144,7 +144,7 @@ const CameraScreen: React.FC = () => {
           style={styles.captureButton}
           onPress={handleTakePhoto}
         >
-          <Text style={styles.captureButtonText}>📷</Text>
+          <Text style={[styles.captureButtonText, { marginTop: -8 }]}>📷</Text>
         </TouchableOpacity>
       </View>
 
@@ -171,7 +171,7 @@ const CameraScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#f9fafb',
   },
   header: {
     flexDirection: 'row',
@@ -185,19 +185,19 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: '#0b0b0b',
     fontWeight: '500',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#0b0b0b',
   },
   cameraContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#7B7B7D',
     margin: 20,
     borderRadius: 20,
   },
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: 16,
-    color: '#9ca3af',
+    color: '#FFF',
     textAlign: 'center',
     paddingHorizontal: 40,
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#fff',
+    backgroundColor: '#7B7B7D',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   },
   controlText: {
     fontSize: 14,
-    color: '#fff',
+    color: '#0b0b0b',
     textAlign: 'center',
   },
 });

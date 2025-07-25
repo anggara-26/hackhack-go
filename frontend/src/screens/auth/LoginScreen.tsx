@@ -11,6 +11,7 @@ import {
   Platform,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { observer } from 'mobx-react-lite';
@@ -69,7 +70,15 @@ const LoginScreen: React.FC = observer(() => {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>🏛️</Text>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{
+              width: 120,
+              height: 40,
+              marginBottom: 20,
+              resizeMode: 'contain',
+            }}
+          />
           <Text style={styles.title}>Selamat Datang</Text>
           <Text style={styles.subtitle}>
             Masuk untuk menyimpan riwayat dan koleksi Anda
@@ -242,11 +251,11 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '500',
   },
   loginButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     borderRadius: 8,
     paddingVertical: 16,
     alignItems: 'center',
@@ -285,7 +294,7 @@ const styles = StyleSheet.create({
   },
   signupText: {
     fontSize: 14,
-    color: '#6366f1',
+    color: '#7B7B7D',
     fontWeight: '600',
   },
 });

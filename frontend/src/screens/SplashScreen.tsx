@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Image } from 'react-native';
 import {
   View,
   Text,
@@ -32,7 +33,7 @@ const SplashScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      <StatusBar barStyle="light-content" backgroundColor="#7B7B7D" />
 
       <Animated.View
         style={[
@@ -44,11 +45,16 @@ const SplashScreen: React.FC = () => {
         ]}
       >
         {/* Logo placeholder - you can replace with actual logo */}
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>🏛️</Text>
-        </View>
+        <Image
+          source={require('../assets/logo-white.png')}
+          style={{
+            width: 180,
+            height: 60,
+            marginBottom: 20,
+            resizeMode: 'contain',
+          }}
+        />
 
-        <Text style={styles.appName}>Museyo</Text>
         <Text style={styles.tagline}>Jelajahi Sejarah dengan AI</Text>
       </Animated.View>
 
@@ -67,7 +73,7 @@ const SplashScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6366f1',
+    backgroundColor: '#7B7B7D',
     justifyContent: 'center',
     alignItems: 'center',
   },
