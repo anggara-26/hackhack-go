@@ -236,6 +236,7 @@ ATURAN:
     try {
       const stream = await this.getOpenAI().responses.create({
         model: "gpt-4.1-mini",
+        tools: [{ type: "web_search_preview" }],
         input: messages,
         max_output_tokens: 300,
         temperature: 0.8,

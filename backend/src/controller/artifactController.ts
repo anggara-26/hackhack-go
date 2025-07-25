@@ -11,6 +11,7 @@ import {
 import path from "path";
 import fs from "fs";
 import errorHOC from "@/utils/errorHandler";
+import { JWTUtils } from "@/utils/jwt";
 
 /**
  * Upload and identify artifact
@@ -105,15 +106,22 @@ export const uploadAndIdentifyArtifact = errorHOC(
 export const getArtifactHistory = errorHOC(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { userId, sessionId } = req.query;
+      const { sessionId } = req.query;
+      // get bearer token from headers
+      const authHeader = req.headers.authorization;
+      const token = authHeader ? authHeader.split(" ")[1] : null;
+
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const skip = (page - 1) * limit;
 
       let query: any = {};
 
-      if (userId) {
-        query.userId = userId;
+      if (token) {
+        // If authenticated, use userId from token
+        const decodedToken = JWTUtils.verifyToken(token);
+        console.log("Decoded token:", decodedToken);
+        query.userId = decodedToken.userId;
       } else if (sessionId) {
         // For anonymous users, we'd need to implement session tracking
         query.userId = null;
@@ -124,6 +132,8 @@ export const getArtifactHistory = errorHOC(
         .skip(skip)
         .limit(limit)
         .lean();
+
+      console.log("Artifacts found:", artifacts.length);
 
       // Get chat sessions for each artifact
       const artifactsWithChats = await Promise.all(
@@ -287,6 +297,150 @@ export const deleteArtifact = errorHOC(
       res.status(500).json({
         success: false,
         message: "Failed to delete artifact",
+        error: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * Get popular artifacts (most visited)
+ */
+export const getPopularArtifacts = errorHOC(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      // Get artifacts with chat session counts as popularity metric
+      const artifacts = await Artifact.aggregate([
+        {
+          $lookup: {
+            from: "chatsessions",
+            localField: "_id",
+            foreignField: "artifactId",
+            as: "chatSessions",
+          },
+        },
+        {
+          $lookup: {
+            from: "userinteractions",
+            localField: "_id",
+            foreignField: "artifactId",
+            as: "interactions",
+          },
+        },
+        {
+          $addFields: {
+            popularity: {
+              $add: [
+                { $size: "$chatSessions" },
+                { $multiply: [{ $size: "$interactions" }, 0.5] },
+              ],
+            },
+          },
+        },
+        {
+          $sort: { popularity: -1, createdAt: -1 },
+        },
+        {
+          $limit: limit,
+        },
+        {
+          $project: {
+            chatSessions: 0,
+            interactions: 0,
+            popularity: 0,
+          },
+        },
+      ]);
+
+      res.json({
+        success: true,
+        data: artifacts,
+      });
+    } catch (error: any) {
+      console.error("Error getting popular artifacts:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get popular artifacts",
+        error: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * Get recent artifacts
+ */
+export const getRecentArtifacts = errorHOC(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const artifacts = await Artifact.find()
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+      res.json({
+        success: true,
+        data: artifacts,
+      });
+    } catch (error: any) {
+      console.error("Error getting recent artifacts:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to get recent artifacts",
+        error: error.message,
+      });
+    }
+  }
+);
+
+/**
+ * Search artifacts by name, category, or description
+ */
+export const searchArtifacts = errorHOC(
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { q } = req.query;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      if (!q || typeof q !== "string") {
+        res.status(400).json({
+          success: false,
+          message: "Search query is required",
+        });
+        return;
+      }
+
+      const searchRegex = new RegExp(q, "i");
+
+      const artifacts = await Artifact.find({
+        $or: [
+          { "identificationResult.name": searchRegex },
+          { "identificationResult.category": searchRegex },
+          { "identificationResult.description": searchRegex },
+          { "identificationResult.culturalSignificance": searchRegex },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+      res.json({
+        success: true,
+        data: artifacts,
+        meta: {
+          query: q,
+          count: artifacts.length,
+        },
+      });
+    } catch (error: any) {
+      console.error("Error searching artifacts:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to search artifacts",
         error: error.message,
       });
     }

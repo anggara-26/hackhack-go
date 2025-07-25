@@ -5,6 +5,9 @@ import {
   getArtifactById,
   serveImage,
   deleteArtifact,
+  getPopularArtifacts,
+  getRecentArtifacts,
+  searchArtifacts,
 } from "../controller/artifactController";
 import { uploadMiddleware } from "../utils/imageUpload";
 
@@ -23,6 +26,21 @@ router.post(
 // @desc    Get user's artifact history
 // @access  Public
 router.get("/history", getArtifactHistory);
+
+// @route   GET /api/artifacts/popular
+// @desc    Get popular artifacts
+// @access  Public
+router.get("/popular", getPopularArtifacts);
+
+// @route   GET /api/artifacts/recent
+// @desc    Get recent artifacts
+// @access  Public
+router.get("/recent", getRecentArtifacts);
+
+// @route   GET /api/artifacts/search
+// @desc    Search artifacts
+// @access  Public
+router.get("/search", searchArtifacts);
 
 // @route   GET /api/artifacts/:id
 // @desc    Get single artifact with details

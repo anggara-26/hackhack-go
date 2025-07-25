@@ -165,10 +165,11 @@ export class ArtifactService {
 
       const artifacts = historyResponse.data.artifacts as unknown as Artifact[];
       const favorites = await this.getFavorites();
+      const pagination = historyResponse.data.pagination;
 
       const historyItems: HistoryItem[] = await Promise.all(
         artifacts.map(async artifact => {
-          const visitCount = await this.getVisitCount(artifact._id);
+          const visitCount = pagination.total;
           return {
             id: artifact._id,
             artifact,

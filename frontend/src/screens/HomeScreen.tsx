@@ -245,7 +245,7 @@ const HomeScreen: React.FC = () => {
       )}
 
       {/* Popular Artifacts */}
-      {popularArtifacts.length > 0 && (
+      {/* {popularArtifacts.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Artefak Populer</Text>
@@ -281,7 +281,7 @@ const HomeScreen: React.FC = () => {
             ))}
           </View>
         </View>
-      )}
+      )} */}
 
       {/* Empty State */}
       {recentArtifacts.length === 0 && !loading && (

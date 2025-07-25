@@ -325,6 +325,27 @@ const ChatScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Rating Section */}
+        {/* {messages.length > 3 && !rating && (
+          <View style={styles.ratingContainer}>
+            <Text style={styles.ratingText}>Gimana percakapannya?</Text>
+            <View style={styles.ratingButtons}>
+              <TouchableOpacity
+                style={styles.ratingButton}
+                onPress={() => handleRating('up')}
+              >
+                <Text style={styles.ratingEmoji}>👍</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.ratingButton}
+                onPress={() => handleRating('down')}
+              >
+                <Text style={styles.ratingEmoji}>👎</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )} */}
+
         {/* Messages */}
         <ScrollView
           ref={scrollViewRef}
@@ -373,27 +394,6 @@ const ChatScreen: React.FC = () => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
-        )}
-
-        {/* Rating Section */}
-        {messages.length > 3 && !rating && (
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingText}>Gimana percakapannya?</Text>
-            <View style={styles.ratingButtons}>
-              <TouchableOpacity
-                style={styles.ratingButton}
-                onPress={() => handleRating('up')}
-              >
-                <Text style={styles.ratingEmoji}>👍</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.ratingButton}
-                onPress={() => handleRating('down')}
-              >
-                <Text style={styles.ratingEmoji}>👎</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         )}
       </KeyboardAvoidingView>
